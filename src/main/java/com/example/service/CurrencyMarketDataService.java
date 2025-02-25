@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+
 @Service
 public class CurrencyMarketDataService {
 
@@ -39,17 +40,6 @@ public class CurrencyMarketDataService {
   }
 
   // Query the latest order book snapshot from the "order_book" measurement
-  public OrderBook getOrderBook(String symbol) {
-    String flux = String.format(
-        "from(bucket: \"%s\") " +
-            "|> range(start: -1m) " +
-            "|> filter(fn: (r) => r._measurement == \"order_book\" and r.symbol == \"%s\") " +
-            "|> last()",
-        bucket, symbol
-    );
-    List<OrderBook> results = queryApi.query(flux, OrderBook.class);
-    return (results != null && !results.isEmpty()) ? results.get(0) : null;
-  }
 
   // Query recent trades from the "trades" measurement (e.g., the last 5 minutes)
   public List<Trade> getRecentTrades(String symbol) {
@@ -104,7 +94,6 @@ public class CurrencyMarketDataService {
   // Aggregate the above data into a single CurrencyMarketData object
   public CurrencyMarketData getMarketData(String symbol) {
     CurrentPrice currentPrice = getCurrentPrice(symbol);
-    OrderBook orderBook = getOrderBook(symbol);
     List<Trade> recentTrades = getRecentTrades(symbol);
     List<Kline> klines = getKlines(symbol);
     TickerStatistics tickerStatistics = getTickerStatistics(symbol);
@@ -113,7 +102,6 @@ public class CurrencyMarketDataService {
     return new CurrencyMarketData(
         symbol,
         currentPrice,
-        orderBook,
         recentTrades,
         klines,
         tickerStatistics,
